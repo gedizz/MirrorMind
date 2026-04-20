@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>MirrorMind – Decision History</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #e3f2fd, #fce4ec);
+            margin: 0; padding: 0;
+        }
+        .container {
+            max-width: 950px;
+            margin: 50px auto;
+            padding: 25px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            font-size: 2.2em;
+            margin-bottom: 20px;
+        }
+        a {
+            display: inline-block;
+            margin-bottom: 25px;
+            color: #4cafef;
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+        a:hover {
+            color: #0b66c2;
+        }
+        .entry {
+            border-bottom: 1px solid #ddd;
+            padding: 15px 0;
+        }
+        .timestamp {
+            font-size: 13px;
+            color: #666;
+        }
+        .mood {
+            font-weight: 600;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            margin-left: 10px;
+            display: inline-block;
+            vertical-align: middle;
+            user-select: none;
+        }
+        .Positive {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .Negative {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .Neutral {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .confidence-container {
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            color: #444;
+        }
+        .confidence-bar {
+            flex-grow: 1;
+            height: 18px;
+            background: #eee;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .confidence-fill {
+            height: 100%;
+            text-align: center;
+            color: white;
+            font-weight: 600;
+            line-height: 18px;
+            white-space: nowrap;
+        }
+        .details {
+            margin-top: 15px;
+            background: #fafafa;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            white-space: pre-wrap;
+            display: none;
+        }
+        button.toggle-btn {
+            margin-top: 10px;
+            padding: 6px 14px;
+            border-radius: 8px;
+            border: none;
+            background-color: #4cafef;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button.toggle-btn:hover {
+            background-color: #0b66c2;
+        }
+        button.delete-btn {
+            background-color: #dc3545;
+            margin-left: 8px;
+        }
+        button.delete-btn:hover {
+            background-color: #a71d2a;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📜 MirrorMind – Decision History</h1>
+        <p><a href="/">⬅ Back to Analysis</a></p>
+
+        {% if history %}
+            {% for item in history %}
+            <div class="entry">
+                <div>
+                    <span class="timestamp">{{ item.timestamp }}</span> |
+                    <strong>Confidence:</strong> {{ item.confidence }}%
+                    <div class="confidence-container">
+                        <div class="confidence-bar" title="Confidence Score: {{ item.confidence }}%">
+                                <div
+                                    class="confidence-fill"
+                                    data-confidence="{{ item.confidence }}"
+                                    data-color="{{ '#28a745' if item.confidence > 70 else ('#ffc107' if item.confidence > 40 else '#dc3545') }}"
+                                >
+                                    {{ item.confidence }}%
+                                </div>
+                        </div>
+                        <em title="Confidence Reason">{{ item.confidence_reason or 'No explanation provided.' }}</em>
+                    </div>
+                    <span class="mood {{ item.mood }}">{{ item.mood }}</span>
+                </div>
+                <div style="margin-top: 8px;"><strong>Decision:</strong> {{ item.user_input | truncate(100) }}</div>
+                <button class="toggle-btn" onclick="toggleDetails('{{ loop.index }}')">View Details</button>
+                <button class="toggle-btn delete-btn" onclick="deleteEntry('{{ item.id }}', '{{ loop.index }}')">Delete</button>
+                <div class="details" id="details-{{ loop.index }}">
+                    <p><strong>Analysis:</strong><br />{{ item.analysis }}</p>
+                    {% if item.simulation %}
+                        <p><strong>Simulation:</strong><br />{{ item.simulation }}</p>
+                    {% else %}
+                        <p><em>No simulation recorded.</em></p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p><em>No history yet.</em></p>
+        {% endif %}
+    </div>
+
+    <script>
+        // Set confidence bar styles after rendering
+        document.querySelectorAll('.confidence-fill').forEach(function(el) {
+            var width = el.getAttribute('data-confidence');
+            var color = el.getAttribute('data-color');
+            el.style.width = width + '%';
+            el.style.backgroundColor = color;
+        });
+
+        function toggleDetails(id) {
+            const el = document.getElementById("details-" + id);
+            el.style.display = (el.style.display === "block") ? "none" : "block";
+        }
+
+        async function deleteEntry(id, index) {
+            if (!confirm("Are you sure you want to delete this history entry?")) return;
+
+            try {
+                const res = await fetch(`/api/history/${id}`, {
+                    method: 'DELETE'
+                });
+                if (res.ok) {
+                    // Remove the entry div from the page
+                    const entryDiv = document.querySelector(`#details-${index}`).parentElement;
+                    entryDiv.remove();
+                } else {
+                    alert('Failed to delete entry');
+                }
+            } catch (error) {
+                alert('Error deleting entry');
+            }
+        }
+    </script>
+</body>
+</html>
