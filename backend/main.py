@@ -262,3 +262,7 @@ async def delete_history_entry(entry_id: int):
     conn.commit()
     conn.close()
     return {"message": "Entry deleted"}
+
+@app.get("/login", response_class=HTMLResponse)
+async def login_page(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
