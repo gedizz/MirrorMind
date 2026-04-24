@@ -194,7 +194,11 @@
 </style>
 </head>
 <body>
-<p class="top-link"><a href="/history">📜 View History</a></p>
+<p class="top-link">
+    <a href="/history">📜 View History</a>
+    |
+    <a href="/login" id="auth_link">🔐 Login</a>
+</p>
 <div class="container">
     <h1>🪞 MirrorMind – Decision Advisor</h1>
     
@@ -328,6 +332,20 @@
         if (!input) return alert("Please enter your decision or reflection.");
         sendRequest("/api/take_advice", { user_input: input }, "advice", e.currentTarget);
     });
+</script>
+<script>
+    const authLink = document.getElementById("auth_link");
+    const isLoggedIn = localStorage.getItem("loggedIn");
+
+    if (isLoggedIn === "true") {
+        authLink.textContent = "Logout";
+        authLink.href = "#";
+
+        authLink.addEventListener("click", function () {
+            localStorage.removeItem("loggedIn");
+            window.location.reload();
+        });
+    }
 </script>
 </body>
 </html>
