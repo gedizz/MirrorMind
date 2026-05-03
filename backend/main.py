@@ -55,7 +55,7 @@ def detect_bias_and_confidence(user_input: str) -> dict:
     """
     try:
         response = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4.1",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7
         )
@@ -89,7 +89,7 @@ def simulate_decision(user_input: str) -> dict:
     """
     try:
         response = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4.1",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7
         )
@@ -119,7 +119,7 @@ def predict_advice_outcome(user_input: str) -> dict:
     """
     try:
         response = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4.1",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7
         )
@@ -164,7 +164,11 @@ def get_mood_trend() -> str:
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(
+    request=request,
+    name="index.html",
+    context={}
+)
 
 @app.post("/api/analyze")
 async def api_analyze(data: dict):
@@ -247,7 +251,11 @@ async def view_history(request: Request):
             "mood": row[7]
         })
 
-    return templates.TemplateResponse("history.html", {"request": request, "history": history_list})
+    return templates.TemplateResponse(
+    request=request,
+    name="history.html",
+    context={"history": history_list}
+)
 
 @app.delete("/api/history/{entry_id}")
 async def delete_history_entry(entry_id: int):
@@ -265,4 +273,8 @@ async def delete_history_entry(entry_id: int):
 
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
+    return templates.TemplateResponse(
+    request=request,
+    name="login.html",
+    context={}
+)
